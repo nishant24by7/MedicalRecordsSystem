@@ -1,11 +1,10 @@
-
+# 🏥 Medical Records System (Soroban Smart Contract)
 <img width="1914" height="1169" alt="image" src="https://github.com/user-attachments/assets/c3bc8433-452e-4cf7-a02b-fe6f1300035a" />
 
+<img width="1919" height="1199" alt="Screenshot 2026-03-25 134059" src="https://github.com/user-attachments/assets/d96c6e8f-5f0b-41e5-a547-d8a6dfbe78d9" />
 
 
 
-
-# 🏥 Medical Records System (Soroban Smart Contract)
 
 ## 📌 Project Description
 The Medical Records System is a decentralized application built on the Stellar Soroban smart contract platform. It enables secure storage and retrieval of patient medical records on-chain, ensuring transparency, integrity, and ownership control.
