@@ -26,7 +26,7 @@ import {
 
 /** Your deployed Soroban contract ID */
 export const CONTRACT_ADDRESS =
-  "CDJVMAX34YRCQ5JFC6SIOQOVSUY6XWEFYJOLF3SBCKU7CMI3IAP6HPWN";
+  "CBLEXWFVQFB27WHBFZJQ676GN5LEWTKQLG7XEDWLGAUWVUOP6Z443SM4";
 
 /** Network passphrase (testnet by default) */
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
@@ -211,56 +211,91 @@ export function toScValBool(value: boolean): xdr.ScVal {
   return nativeToScVal(value, { type: "bool" });
 }
 
+export function toScValBytes(value: string): xdr.ScVal {
+  // Convert base64 encoded string to bytes ScVal
+  const bytes = Buffer.from(value, "base64");
+  return nativeToScVal(bytes, { type: "bytes" });
+}
+
 // ============================================================
-// Supply Chain Tracker — Contract Methods
+// Medical Records System — Contract Methods
 // ============================================================
 
 /**
- * Add a product to the supply chain.
- * Calls: add_product(product_id: String, origin: String)
+ * Add a new medical record.
+ * Calls: add_record(patient: Address, data: Bytes) -> u32
+ * Returns: Record ID
  */
-export async function addProduct(
+export async function addRecord(
   caller: string,
-  productId: string,
-  origin: string
-) {
+  data: string
+): Promise<unknown> {
   return callContract(
-    "add_product",
-    [toScValString(productId), toScValString(origin)],
+    "add_record",
+    [toScValAddress(caller), toScValBytes(data)],
     caller,
     true
   );
 }
 
 /**
- * Update a product's status.
- * Calls: update_status(product_id: String, new_status: String)
+ * Get a medical record (only owner can access).
+ * Calls: get_record(id: u32, caller: Address) -> Bytes
+ * Returns: The record data as Bytes
  */
-export async function updateProductStatus(
+export async function getRecord(
+  id: number,
+  caller: string
+): Promise<string | null> {
+  const result = await readContract(
+    "get_record",
+    [toScValU32(id), toScValAddress(caller)],
+    caller
+  );
+  // Convert result to base64 string if needed
+  if (result && typeof result === "object" && result !== null) {
+    // Handle buffer/typed array result
+    if (result instanceof Uint8Array) {
+      return Buffer.from(result).toString("base64");
+    }
+    // Handle object with data property
+    const asAny = result as Record<string, unknown>;
+    if (asAny.data instanceof Uint8Array) {
+      return Buffer.from(asAny.data).toString("base64");
+    }
+    return JSON.stringify(result);
+  }
+  return result as string | null;
+}
+
+/**
+ * Update a medical record (only owner).
+ * Calls: update_record(id: u32, caller: Address, new_data: Bytes)
+ */
+export async function updateRecord(
   caller: string,
-  productId: string,
-  newStatus: string
-) {
+  id: number,
+  newData: string
+): Promise<unknown> {
   return callContract(
-    "update_status",
-    [toScValString(productId), toScValString(newStatus)],
+    "update_record",
+    [toScValU32(id), toScValAddress(caller), toScValBytes(newData)],
     caller,
     true
   );
 }
 
 /**
- * Get product details (read-only).
- * Calls: get_product(product_id: String) -> Map<Symbol, String>
- * Returns: { origin: string, status: string } or null
+ * Get the owner of a medical record.
+ * Calls: get_owner(id: u32) -> Address
  */
-export async function getProduct(
-  productId: string,
+export async function getRecordOwner(
+  id: number,
   caller?: string
-) {
+): Promise<string | null> {
   return readContract(
-    "get_product",
-    [toScValString(productId)],
+    "get_owner",
+    [toScValU32(id)],
     caller
   );
 }
